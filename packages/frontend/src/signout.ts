@@ -20,13 +20,10 @@ export async function signout() {
 	defaultMemoryStorage.clear();
 	document.cookie = 'token=; path=/; max-age=0';
 
-	const idbPromises = ['MisskeyClient', 'keyval-store'].map((name, i, arr) => new Promise((res, rej) => {
-		indexedDB.deleteDatabase(name);
-	}));
+    const dbs = await window.indexedDB.databases();
+    dbs.forEach(db => { window.indexedDB.deleteDatabase(db.name!) });
 
-	await Promise.all(idbPromises);
-
-	//#region Remove service worker registration
+	// #region Remove service worker registration
 	try {
 		if (navigator.serviceWorker.controller) {
 			const registration = await navigator.serviceWorker.ready;
@@ -50,7 +47,7 @@ export async function signout() {
 				return Promise.all(registrations.map(registration => registration.unregister()));
 			});
 	} catch (err) {}
-	//#endregion
+	// #endregion
 
 	unisonReload('/');
 }
