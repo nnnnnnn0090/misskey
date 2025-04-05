@@ -29,6 +29,7 @@ import { isMimeImage } from '@/misc/is-mime-image.js';
 import { correctFilename } from '@/misc/correct-filename.js';
 import { handleRequestRedirectToOmitSearch } from '@/misc/fastify-hook-handlers.js';
 import type { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginOptions } from 'fastify';
+import fastifyCookie from '@fastify/cookie';
 import { AuthenticateService } from './api/AuthenticateService.js';
 import { MiLocalUser } from '@/models/User.js';
 
@@ -60,7 +61,7 @@ export class FileServerService {
 
 		//this.createServer = this.createServer.bind(this);
 	}
-	
+
 	@bindThis
 	private async isAuthenticated(token: string) {
 		let user: MiLocalUser | null = null;
@@ -112,6 +113,8 @@ export class FileServerService {
 			});
 			done();
 		});
+
+		fastify.register(fastifyCookie, {});
 
 		fastify.get<{
 			Params: { url: string; };
