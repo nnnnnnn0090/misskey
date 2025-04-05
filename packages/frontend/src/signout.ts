@@ -20,10 +20,13 @@ export async function signout() {
 	defaultMemoryStorage.clear();
 	document.cookie = 'token=; path=/; max-age=0';
 
-    const dbs = await window.indexedDB.databases();
-    dbs.forEach(db => { window.indexedDB.deleteDatabase(db.name!) });
+	const idbPromises = ['MisskeyClient', 'keyval-store'].map((name, i, arr) => new Promise((res, rej) => {
+		indexedDB.deleteDatabase(name);
+	}));
 
-	// #region Remove service worker registration
+	await Promise.all(idbPromises);
+
+	//#region Remove service worker registration
 	try {
 		if (navigator.serviceWorker.controller) {
 			const registration = await navigator.serviceWorker.ready;
