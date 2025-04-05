@@ -923,7 +923,7 @@ export class ClientServerService {
 
 		fastify.get('/_info_card_', async (request, reply) => {
 			if (!await this.isAuthenticated(request.cookies.token)) return;
-			
+
 			reply.removeHeader('X-Frame-Options');
 
 			return await reply.view('info-card', {
