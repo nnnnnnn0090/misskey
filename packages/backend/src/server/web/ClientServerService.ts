@@ -13,6 +13,7 @@ import pug from 'pug';
 import { In, IsNull } from 'typeorm';
 import fastifyStatic from '@fastify/static';
 import fastifyView from '@fastify/view';
+import fastifyCookie from '@fastify/cookie';
 import fastifyProxy from '@fastify/http-proxy';
 import vary from 'vary';
 import htmlSafeJsonStringify from 'htmlescape';
@@ -240,6 +241,8 @@ export class ClientServerService {
 
 	@bindThis
 	public createServer(fastify: FastifyInstance, options: FastifyPluginOptions, done: (err?: Error) => void) {
+		fastify.register(fastifyCookie, {});
+
 		fastify.register(fastifyView, {
 			root: _dirname + '/views',
 			engine: {
