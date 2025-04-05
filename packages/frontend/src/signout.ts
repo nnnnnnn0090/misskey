@@ -18,6 +18,7 @@ export async function signout() {
 
 	localStorage.clear();
 	defaultMemoryStorage.clear();
+	document.cookie = 'token=; path=/; max-age=0';
 
 	const idbPromises = ['MisskeyClient', 'keyval-store'].map((name, i, arr) => new Promise((res, rej) => {
 		indexedDB.deleteDatabase(name);

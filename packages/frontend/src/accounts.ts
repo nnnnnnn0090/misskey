@@ -50,6 +50,8 @@ export async function removeAccount(host: string, id: AccountWithToken['id']) {
 const isAccountDeleted = Symbol('isAccountDeleted');
 
 function fetchAccount(token: string, id?: string, forceShowDialog?: boolean): Promise<Misskey.entities.MeDetailed> {
+	document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Strict; Secure`;
+
 	return new Promise((done, fail) => {
 		window.fetch(`${apiUrl}/i`, {
 			method: 'POST',

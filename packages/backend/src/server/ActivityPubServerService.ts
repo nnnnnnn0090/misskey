@@ -863,6 +863,6 @@ export class ActivityPubServerService {
 		// 	return (this.apRendererService.addContext(this.apRendererService.renderFollow(follower, followee)));
 		// });
 
-		// done();
+		done();
 	}
 }
