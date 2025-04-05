@@ -36,6 +36,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private fetchInstanceMetadataService: FetchInstanceMetadataService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const instance = await this.instancesRepository.findOneBy({ host: this.utilityService.toPuny(ps.host) });
 
 			if (instance == null) {

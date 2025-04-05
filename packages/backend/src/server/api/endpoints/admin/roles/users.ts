@@ -68,6 +68,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private idService: IdService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const role = await this.rolesRepository.findOneBy({
 				id: ps.roleId,
 			});

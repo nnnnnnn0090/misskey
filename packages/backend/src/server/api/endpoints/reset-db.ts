@@ -45,6 +45,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private globalEventService: GlobalEventService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			if (process.env.NODE_ENV !== 'test') throw new Error('NODE_ENV is not a test');
 
 			const logger = this.loggerService.getLogger('reset-db');

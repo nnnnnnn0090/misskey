@@ -58,6 +58,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const currentCount = await this.userListsRepository.countBy({
 				userId: me.id,
 			});

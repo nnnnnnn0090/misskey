@@ -57,6 +57,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		@Inject('queue:systemWebhookDeliver') public systemWebhookDeliverQueue: SystemWebhookDeliverQueue,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const deliverJobCounts = await this.deliverQueue.getJobCounts();
 			const inboxJobCounts = await this.inboxQueue.getJobCounts();
 			const dbJobCounts = await this.dbQueue.getJobCounts();

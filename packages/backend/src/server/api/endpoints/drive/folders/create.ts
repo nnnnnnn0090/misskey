@@ -60,6 +60,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private globalEventService: GlobalEventService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			// If the parent folder is specified
 			let parent = null;
 			if (ps.parentId) {

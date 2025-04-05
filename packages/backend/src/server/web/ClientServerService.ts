@@ -50,6 +50,7 @@ import type {
 	ReversiGamesRepository,
 	UserProfilesRepository,
 	UsersRepository,
+	MiAccessToken,
 } from '@/models/_.js';
 import type Logger from '@/logger.js';
 import { handleRequestRedirectToOmitSearch } from '@/misc/fastify-hook-handlers.js';
@@ -62,6 +63,8 @@ import { FeedService } from './FeedService.js';
 import { UrlPreviewService } from './UrlPreviewService.js';
 import { ClientLoggerService } from './ClientLoggerService.js';
 import type { FastifyInstance, FastifyPluginOptions, FastifyReply } from 'fastify';
+import { AuthenticateService } from '../api/AuthenticateService.js';
+import { MiLocalUser } from '@/models/User.js';
 
 const _filename = fileURLToPath(import.meta.url);
 const _dirname = dirname(_filename);
@@ -129,6 +132,7 @@ export class ClientServerService {
 		private feedService: FeedService,
 		private roleService: RoleService,
 		private clientLoggerService: ClientLoggerService,
+		private authenticateService: AuthenticateService,
 
 		@Inject('queue:system') public systemQueue: SystemQueue,
 		@Inject('queue:endedPollNotification') public endedPollNotificationQueue: EndedPollNotificationQueue,
@@ -213,6 +217,25 @@ export class ClientServerService {
 			metaJson: htmlSafeJsonStringify(await this.metaEntityService.packDetailed(meta)),
 			now: Date.now(),
 		};
+	}
+
+	@bindThis
+	private async isAuthenticated(token: string) {
+		let user: MiLocalUser | null = null;
+		let app: MiAccessToken | null = null;
+
+		try {
+			if (token == null) {
+				return false;
+			}
+			[user, app] = await this.authenticateService.authenticate(token);
+			if (user == null) {
+				return false;
+			}
+		} catch (e) {
+			return false;
+		}
+		return true;
 	}
 
 	@bindThis
@@ -458,6 +481,8 @@ export class ClientServerService {
 
 		// Atom
 		fastify.get<{ Params: { user?: string; } }>('/@:user.atom', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			if (request.params.user == null) return await renderBase(reply);
 
 			const feed = await getFeed(request.params.user);
@@ -473,6 +498,8 @@ export class ClientServerService {
 
 		// RSS
 		fastify.get<{ Params: { user?: string; } }>('/@:user.rss', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			if (request.params.user == null) return await renderBase(reply);
 
 			const feed = await getFeed(request.params.user);
@@ -488,6 +515,8 @@ export class ClientServerService {
 
 		// JSON
 		fastify.get<{ Params: { user?: string; } }>('/@:user.json', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			if (request.params.user == null) return await renderBase(reply);
 
 			const feed = await getFeed(request.params.user);
@@ -504,6 +533,8 @@ export class ClientServerService {
 		//#region SSR
 		// User
 		fastify.get<{ Params: { user: string; sub?: string; } }>('/@:user/:sub?', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			const { username, host } = Acct.parse(request.params.user);
 			const user = await this.usersRepository.findOneBy({
 				usernameLower: username.toLowerCase(),
@@ -549,6 +580,8 @@ export class ClientServerService {
 		});
 
 		fastify.get<{ Params: { user: string; } }>('/users/:user', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			const user = await this.usersRepository.findOneBy({
 				id: request.params.user,
 				host: IsNull(),
@@ -567,6 +600,8 @@ export class ClientServerService {
 
 		// Note
 		fastify.get<{ Params: { note: string; } }>('/notes/:note', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			vary(reply.raw, 'Accept');
 
 			const note = await this.notesRepository.findOne({
@@ -603,6 +638,8 @@ export class ClientServerService {
 
 		// Page
 		fastify.get<{ Params: { user: string; page: string; } }>('/@:user/pages/:page', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			const { username, host } = Acct.parse(request.params.user);
 			const user = await this.usersRepository.findOneBy({
 				usernameLower: username.toLowerCase(),
@@ -641,6 +678,8 @@ export class ClientServerService {
 
 		// Flash
 		fastify.get<{ Params: { id: string; } }>('/play/:id', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			const flash = await this.flashsRepository.findOneBy({
 				id: request.params.id,
 			});
@@ -666,6 +705,8 @@ export class ClientServerService {
 
 		// Clip
 		fastify.get<{ Params: { clip: string; } }>('/clips/:clip', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			const clip = await this.clipsRepository.findOneBy({
 				id: request.params.clip,
 			});
@@ -694,6 +735,8 @@ export class ClientServerService {
 
 		// Gallery post
 		fastify.get<{ Params: { post: string; } }>('/gallery/:post', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			const post = await this.galleryPostsRepository.findOneBy({ id: request.params.post });
 
 			if (post) {
@@ -717,6 +760,8 @@ export class ClientServerService {
 
 		// Channel
 		fastify.get<{ Params: { channel: string; } }>('/channels/:channel', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			const channel = await this.channelsRepository.findOneBy({
 				id: request.params.channel,
 			});
@@ -735,6 +780,8 @@ export class ClientServerService {
 
 		// Reversi game
 		fastify.get<{ Params: { game: string; } }>('/reversi/g/:game', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			const game = await this.reversiGamesRepository.findOneBy({
 				id: request.params.game,
 			});
@@ -753,6 +800,8 @@ export class ClientServerService {
 
 		// 個別お知らせページ
 		fastify.get<{ Params: { announcementId: string; } }>('/announcements/:announcementId', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			const announcement = await this.announcementsRepository.findOneBy({
 				id: request.params.announcementId,
 				userId: IsNull(),
@@ -774,17 +823,23 @@ export class ClientServerService {
 		//#region noindex pages
 		// Tags
 		fastify.get<{ Params: { clip: string; } }>('/tags/:tag', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			return await renderBase(reply, { noindex: true });
 		});
 
 		// User with Tags
 		fastify.get<{ Params: { clip: string; } }>('/user-tags/:tag', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			return await renderBase(reply, { noindex: true });
 		});
 		//#endregion
 
 		//#region embed pages
 		fastify.get<{ Params: { user: string; } }>('/embed/user-timeline/:user', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			reply.removeHeader('X-Frame-Options');
 
 			const user = await this.usersRepository.findOneBy({
@@ -807,6 +862,8 @@ export class ClientServerService {
 		});
 
 		fastify.get<{ Params: { note: string; } }>('/embed/notes/:note', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			reply.removeHeader('X-Frame-Options');
 
 			const note = await this.notesRepository.findOneBy({
@@ -830,6 +887,8 @@ export class ClientServerService {
 		});
 
 		fastify.get<{ Params: { clip: string; } }>('/embed/clips/:clip', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			reply.removeHeader('X-Frame-Options');
 
 			const clip = await this.clipsRepository.findOneBy({
@@ -851,6 +910,8 @@ export class ClientServerService {
 		});
 
 		fastify.get('/embed/*', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			reply.removeHeader('X-Frame-Options');
 
 			reply.header('Cache-Control', 'public, max-age=3600');
@@ -861,6 +922,8 @@ export class ClientServerService {
 		});
 
 		fastify.get('/_info_card_', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+			
 			reply.removeHeader('X-Frame-Options');
 
 			return await reply.view('info-card', {

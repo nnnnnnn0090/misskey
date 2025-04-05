@@ -47,6 +47,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private clipService: ClipService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			try {
 				await this.clipService.removeNote(me, ps.clipId, ps.noteId);
 			} catch (e) {

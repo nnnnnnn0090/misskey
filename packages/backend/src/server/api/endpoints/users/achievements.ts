@@ -42,6 +42,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private userProfilesRepository: UserProfilesRepository,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const profile = await this.userProfilesRepository.findOneByOrFail({ userId: ps.userId });
 
 			return profile.achievements;

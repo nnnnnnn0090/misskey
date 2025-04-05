@@ -36,6 +36,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private customEmojiService: CustomEmojiService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			await this.customEmojiService.setLicenseBulk(ps.ids, ps.license ?? null);
 		});
 	}

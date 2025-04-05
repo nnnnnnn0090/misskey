@@ -54,6 +54,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private reversiGameEntityService: ReversiGameEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			if (ps.userId === me.id) throw new ApiError(meta.errors.isYourself);
 
 			const target = ps.userId ? await this.getterService.getUser(ps.userId).catch(err => {

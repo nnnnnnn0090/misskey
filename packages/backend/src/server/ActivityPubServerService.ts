@@ -537,332 +537,332 @@ export class ActivityPubServerService {
 
 	@bindThis
 	public createServer(fastify: FastifyInstance, options: FastifyPluginOptions, done: (err?: Error) => void) {
-		fastify.addConstraintStrategy({
-			name: 'apOrHtml',
-			storage() {
-				const store = {} as any;
-				return {
-					get(key: string) {
-						return store[key] ?? null;
-					},
-					set(key: string, value: any) {
-						store[key] = value;
-					},
-				};
-			},
-			deriveConstraint(request: IncomingMessage) {
-				const accepted = accepts(request).type(['html', ACTIVITY_JSON, LD_JSON]);
-				if (accepted === false) return null;
-				return accepted !== 'html' ? 'ap' : 'html';
-			},
-		});
+		// fastify.addConstraintStrategy({
+		// 	name: 'apOrHtml',
+		// 	storage() {
+		// 		const store = {} as any;
+		// 		return {
+		// 			get(key: string) {
+		// 				return store[key] ?? null;
+		// 			},
+		// 			set(key: string, value: any) {
+		// 				store[key] = value;
+		// 			},
+		// 		};
+		// 	},
+		// 	deriveConstraint(request: IncomingMessage) {
+		// 		const accepted = accepts(request).type(['html', ACTIVITY_JSON, LD_JSON]);
+		// 		if (accepted === false) return null;
+		// 		return accepted !== 'html' ? 'ap' : 'html';
+		// 	},
+		// });
 
-		const almostDefaultJsonParser: FastifyBodyParser<Buffer> = function (request, rawBody, done) {
-			if (rawBody.length === 0) {
-				const err = new Error('Body cannot be empty!') as any;
-				err.statusCode = 400;
-				return done(err);
-			}
+		// const almostDefaultJsonParser: FastifyBodyParser<Buffer> = function (request, rawBody, done) {
+		// 	if (rawBody.length === 0) {
+		// 		const err = new Error('Body cannot be empty!') as any;
+		// 		err.statusCode = 400;
+		// 		return done(err);
+		// 	}
 
-			try {
-				const json = secureJson.parse(rawBody.toString('utf8'), null, {
-					protoAction: 'ignore',
-					constructorAction: 'ignore',
-				});
-				done(null, json);
-			} catch (err: any) {
-				err.statusCode = 400;
-				return done(err);
-			}
-		};
+		// 	try {
+		// 		const json = secureJson.parse(rawBody.toString('utf8'), null, {
+		// 			protoAction: 'ignore',
+		// 			constructorAction: 'ignore',
+		// 		});
+		// 		done(null, json);
+		// 	} catch (err: any) {
+		// 		err.statusCode = 400;
+		// 		return done(err);
+		// 	}
+		// };
 
-		fastify.register(fastifyAccepts);
-		fastify.addContentTypeParser('application/activity+json', { parseAs: 'buffer' }, almostDefaultJsonParser);
-		fastify.addContentTypeParser('application/ld+json', { parseAs: 'buffer' }, almostDefaultJsonParser);
+		// fastify.register(fastifyAccepts);
+		// fastify.addContentTypeParser('application/activity+json', { parseAs: 'buffer' }, almostDefaultJsonParser);
+		// fastify.addContentTypeParser('application/ld+json', { parseAs: 'buffer' }, almostDefaultJsonParser);
 
-		fastify.addHook('onRequest', (request, reply, done) => {
-			reply.header('Access-Control-Allow-Headers', 'Accept');
-			reply.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-			reply.header('Access-Control-Allow-Origin', '*');
-			reply.header('Access-Control-Expose-Headers', 'Vary');
-			done();
-		});
+		// fastify.addHook('onRequest', (request, reply, done) => {
+		// 	reply.header('Access-Control-Allow-Headers', 'Accept');
+		// 	reply.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+		// 	reply.header('Access-Control-Allow-Origin', '*');
+		// 	reply.header('Access-Control-Expose-Headers', 'Vary');
+		// 	done();
+		// });
 
-		//#region Routing
-		// inbox (limit: 64kb)
-		fastify.post('/inbox', { config: { rawBody: true }, bodyLimit: 1024 * 64 }, async (request, reply) => await this.inbox(request, reply));
-		fastify.post('/users/:user/inbox', { config: { rawBody: true }, bodyLimit: 1024 * 64 }, async (request, reply) => await this.inbox(request, reply));
+		// //#region Routing
+		// // inbox (limit: 64kb)
+		// fastify.post('/inbox', { config: { rawBody: true }, bodyLimit: 1024 * 64 }, async (request, reply) => await this.inbox(request, reply));
+		// fastify.post('/users/:user/inbox', { config: { rawBody: true }, bodyLimit: 1024 * 64 }, async (request, reply) => await this.inbox(request, reply));
 
-		// note
-		fastify.get<{ Params: { note: string; } }>('/notes/:note', { constraints: { apOrHtml: 'ap' } }, async (request, reply) => {
-			vary(reply.raw, 'Accept');
+		// // note
+		// fastify.get<{ Params: { note: string; } }>('/notes/:note', { constraints: { apOrHtml: 'ap' } }, async (request, reply) => {
+		// 	vary(reply.raw, 'Accept');
 
-			if (this.meta.federation === 'none') {
-				reply.code(403);
-				return;
-			}
+		// 	if (this.meta.federation === 'none') {
+		// 		reply.code(403);
+		// 		return;
+		// 	}
 
-			const note = await this.notesRepository.findOneBy({
-				id: request.params.note,
-				visibility: In(['public', 'home']),
-				localOnly: false,
-			});
+		// 	const note = await this.notesRepository.findOneBy({
+		// 		id: request.params.note,
+		// 		visibility: In(['public', 'home']),
+		// 		localOnly: false,
+		// 	});
 
-			if (note == null) {
-				reply.code(404);
-				return;
-			}
+		// 	if (note == null) {
+		// 		reply.code(404);
+		// 		return;
+		// 	}
 
-			// リモートだったらリダイレクト
-			if (note.userHost != null) {
-				if (note.uri == null || this.utilityService.isSelfHost(note.userHost)) {
-					reply.code(500);
-					return;
-				}
-				reply.redirect(note.uri);
-				return;
-			}
+		// 	// リモートだったらリダイレクト
+		// 	if (note.userHost != null) {
+		// 		if (note.uri == null || this.utilityService.isSelfHost(note.userHost)) {
+		// 			reply.code(500);
+		// 			return;
+		// 		}
+		// 		reply.redirect(note.uri);
+		// 		return;
+		// 	}
 
-			reply.header('Cache-Control', 'public, max-age=180');
-			this.setResponseType(request, reply);
-			return this.apRendererService.addContext(await this.apRendererService.renderNote(note, false));
-		});
+		// 	reply.header('Cache-Control', 'public, max-age=180');
+		// 	this.setResponseType(request, reply);
+		// 	return this.apRendererService.addContext(await this.apRendererService.renderNote(note, false));
+		// });
 
-		// note activity
-		fastify.get<{ Params: { note: string; } }>('/notes/:note/activity', async (request, reply) => {
-			vary(reply.raw, 'Accept');
+		// // note activity
+		// fastify.get<{ Params: { note: string; } }>('/notes/:note/activity', async (request, reply) => {
+		// 	vary(reply.raw, 'Accept');
 
-			if (this.meta.federation === 'none') {
-				reply.code(403);
-				return;
-			}
+		// 	if (this.meta.federation === 'none') {
+		// 		reply.code(403);
+		// 		return;
+		// 	}
 
-			const note = await this.notesRepository.findOneBy({
-				id: request.params.note,
-				userHost: IsNull(),
-				visibility: In(['public', 'home']),
-				localOnly: false,
-			});
+		// 	const note = await this.notesRepository.findOneBy({
+		// 		id: request.params.note,
+		// 		userHost: IsNull(),
+		// 		visibility: In(['public', 'home']),
+		// 		localOnly: false,
+		// 	});
 
-			if (note == null) {
-				reply.code(404);
-				return;
-			}
+		// 	if (note == null) {
+		// 		reply.code(404);
+		// 		return;
+		// 	}
 
-			reply.header('Cache-Control', 'public, max-age=180');
-			this.setResponseType(request, reply);
-			return (this.apRendererService.addContext(await this.packActivity(note)));
-		});
+		// 	reply.header('Cache-Control', 'public, max-age=180');
+		// 	this.setResponseType(request, reply);
+		// 	return (this.apRendererService.addContext(await this.packActivity(note)));
+		// });
 
-		// outbox
-		fastify.get<{
-			Params: { user: string; };
-			Querystring: { since_id?: string; until_id?: string; page?: string; };
-		}>('/users/:user/outbox', async (request, reply) => await this.outbox(request, reply));
+		// // outbox
+		// fastify.get<{
+		// 	Params: { user: string; };
+		// 	Querystring: { since_id?: string; until_id?: string; page?: string; };
+		// }>('/users/:user/outbox', async (request, reply) => await this.outbox(request, reply));
 
-		// followers
-		fastify.get<{
-			Params: { user: string; };
-			Querystring: { cursor?: string; page?: string; };
-		}>('/users/:user/followers', async (request, reply) => await this.followers(request, reply));
+		// // followers
+		// fastify.get<{
+		// 	Params: { user: string; };
+		// 	Querystring: { cursor?: string; page?: string; };
+		// }>('/users/:user/followers', async (request, reply) => await this.followers(request, reply));
 
-		// following
-		fastify.get<{
-			Params: { user: string; };
-			Querystring: { cursor?: string; page?: string; };
-		}>('/users/:user/following', async (request, reply) => await this.following(request, reply));
+		// // following
+		// fastify.get<{
+		// 	Params: { user: string; };
+		// 	Querystring: { cursor?: string; page?: string; };
+		// }>('/users/:user/following', async (request, reply) => await this.following(request, reply));
 
-		// featured
-		fastify.get<{ Params: { user: string; }; }>('/users/:user/collections/featured', async (request, reply) => await this.featured(request, reply));
+		// // featured
+		// fastify.get<{ Params: { user: string; }; }>('/users/:user/collections/featured', async (request, reply) => await this.featured(request, reply));
 
-		// publickey
-		fastify.get<{ Params: { user: string; } }>('/users/:user/publickey', async (request, reply) => {
-			if (this.meta.federation === 'none') {
-				reply.code(403);
-				return;
-			}
+		// // publickey
+		// fastify.get<{ Params: { user: string; } }>('/users/:user/publickey', async (request, reply) => {
+		// 	if (this.meta.federation === 'none') {
+		// 		reply.code(403);
+		// 		return;
+		// 	}
 
-			const userId = request.params.user;
+		// 	const userId = request.params.user;
 
-			const user = await this.usersRepository.findOneBy({
-				id: userId,
-				host: IsNull(),
-			});
+		// 	const user = await this.usersRepository.findOneBy({
+		// 		id: userId,
+		// 		host: IsNull(),
+		// 	});
 
-			if (user == null) {
-				reply.code(404);
-				return;
-			}
+		// 	if (user == null) {
+		// 		reply.code(404);
+		// 		return;
+		// 	}
 
-			const keypair = await this.userKeypairService.getUserKeypair(user.id);
+		// 	const keypair = await this.userKeypairService.getUserKeypair(user.id);
 
-			if (this.userEntityService.isLocalUser(user)) {
-				reply.header('Cache-Control', 'public, max-age=180');
-				this.setResponseType(request, reply);
-				return (this.apRendererService.addContext(this.apRendererService.renderKey(user, keypair)));
-			} else {
-				reply.code(400);
-				return;
-			}
-		});
+		// 	if (this.userEntityService.isLocalUser(user)) {
+		// 		reply.header('Cache-Control', 'public, max-age=180');
+		// 		this.setResponseType(request, reply);
+		// 		return (this.apRendererService.addContext(this.apRendererService.renderKey(user, keypair)));
+		// 	} else {
+		// 		reply.code(400);
+		// 		return;
+		// 	}
+		// });
 
-		fastify.get<{ Params: { user: string; } }>('/users/:user', { constraints: { apOrHtml: 'ap' } }, async (request, reply) => {
-			vary(reply.raw, 'Accept');
+		// fastify.get<{ Params: { user: string; } }>('/users/:user', { constraints: { apOrHtml: 'ap' } }, async (request, reply) => {
+		// 	vary(reply.raw, 'Accept');
 
-			if (this.meta.federation === 'none') {
-				reply.code(403);
-				return;
-			}
+		// 	if (this.meta.federation === 'none') {
+		// 		reply.code(403);
+		// 		return;
+		// 	}
 
-			const userId = request.params.user;
+		// 	const userId = request.params.user;
 
-			const user = await this.usersRepository.findOneBy({
-				id: userId,
-				isSuspended: false,
-			});
+		// 	const user = await this.usersRepository.findOneBy({
+		// 		id: userId,
+		// 		isSuspended: false,
+		// 	});
 
-			return await this.userInfo(request, reply, user);
-		});
+		// 	return await this.userInfo(request, reply, user);
+		// });
 
-		fastify.get<{ Params: { acct: string; } }>('/@:acct', { constraints: { apOrHtml: 'ap' } }, async (request, reply) => {
-			vary(reply.raw, 'Accept');
+		// fastify.get<{ Params: { acct: string; } }>('/@:acct', { constraints: { apOrHtml: 'ap' } }, async (request, reply) => {
+		// 	vary(reply.raw, 'Accept');
 
-			if (this.meta.federation === 'none') {
-				reply.code(403);
-				return;
-			}
+		// 	if (this.meta.federation === 'none') {
+		// 		reply.code(403);
+		// 		return;
+		// 	}
 
-			const acct = Acct.parse(request.params.acct);
+		// 	const acct = Acct.parse(request.params.acct);
 
-			const user = await this.usersRepository.findOneBy({
-				usernameLower: acct.username,
-				host: acct.host ?? IsNull(),
-				isSuspended: false,
-			});
+		// 	const user = await this.usersRepository.findOneBy({
+		// 		usernameLower: acct.username,
+		// 		host: acct.host ?? IsNull(),
+		// 		isSuspended: false,
+		// 	});
 
-			return await this.userInfo(request, reply, user);
-		});
-		//#endregion
+		// 	return await this.userInfo(request, reply, user);
+		// });
+		// //#endregion
 
-		// emoji
-		fastify.get<{ Params: { emoji: string; } }>('/emojis/:emoji', async (request, reply) => {
-			if (this.meta.federation === 'none') {
-				reply.code(403);
-				return;
-			}
+		// // emoji
+		// fastify.get<{ Params: { emoji: string; } }>('/emojis/:emoji', async (request, reply) => {
+		// 	if (this.meta.federation === 'none') {
+		// 		reply.code(403);
+		// 		return;
+		// 	}
 
-			const emoji = await this.emojisRepository.findOneBy({
-				host: IsNull(),
-				name: request.params.emoji,
-			});
+		// 	const emoji = await this.emojisRepository.findOneBy({
+		// 		host: IsNull(),
+		// 		name: request.params.emoji,
+		// 	});
 
-			if (emoji == null || emoji.localOnly) {
-				reply.code(404);
-				return;
-			}
+		// 	if (emoji == null || emoji.localOnly) {
+		// 		reply.code(404);
+		// 		return;
+		// 	}
 
-			reply.header('Cache-Control', 'public, max-age=180');
-			this.setResponseType(request, reply);
-			return (this.apRendererService.addContext(await this.apRendererService.renderEmoji(emoji)));
-		});
+		// 	reply.header('Cache-Control', 'public, max-age=180');
+		// 	this.setResponseType(request, reply);
+		// 	return (this.apRendererService.addContext(await this.apRendererService.renderEmoji(emoji)));
+		// });
 
-		// like
-		fastify.get<{ Params: { like: string; } }>('/likes/:like', async (request, reply) => {
-			if (this.meta.federation === 'none') {
-				reply.code(403);
-				return;
-			}
+		// // like
+		// fastify.get<{ Params: { like: string; } }>('/likes/:like', async (request, reply) => {
+		// 	if (this.meta.federation === 'none') {
+		// 		reply.code(403);
+		// 		return;
+		// 	}
 
-			const reaction = await this.noteReactionsRepository.findOneBy({ id: request.params.like });
+		// 	const reaction = await this.noteReactionsRepository.findOneBy({ id: request.params.like });
 
-			if (reaction == null) {
-				reply.code(404);
-				return;
-			}
+		// 	if (reaction == null) {
+		// 		reply.code(404);
+		// 		return;
+		// 	}
 
-			const note = await this.notesRepository.findOneBy({ id: reaction.noteId });
+		// 	const note = await this.notesRepository.findOneBy({ id: reaction.noteId });
 
-			if (note == null) {
-				reply.code(404);
-				return;
-			}
+		// 	if (note == null) {
+		// 		reply.code(404);
+		// 		return;
+		// 	}
 
-			reply.header('Cache-Control', 'public, max-age=180');
-			this.setResponseType(request, reply);
-			return (this.apRendererService.addContext(await this.apRendererService.renderLike(reaction, note)));
-		});
+		// 	reply.header('Cache-Control', 'public, max-age=180');
+		// 	this.setResponseType(request, reply);
+		// 	return (this.apRendererService.addContext(await this.apRendererService.renderLike(reaction, note)));
+		// });
 
-		// follow
-		fastify.get<{ Params: { follower: string; followee: string; } }>('/follows/:follower/:followee', async (request, reply) => {
-			if (this.meta.federation === 'none') {
-				reply.code(403);
-				return;
-			}
+		// // follow
+		// fastify.get<{ Params: { follower: string; followee: string; } }>('/follows/:follower/:followee', async (request, reply) => {
+		// 	if (this.meta.federation === 'none') {
+		// 		reply.code(403);
+		// 		return;
+		// 	}
 
-			// This may be used before the follow is completed, so we do not
-			// check if the following exists.
+		// 	// This may be used before the follow is completed, so we do not
+		// 	// check if the following exists.
 
-			const [follower, followee] = await Promise.all([
-				this.usersRepository.findOneBy({
-					id: request.params.follower,
-					host: IsNull(),
-				}),
-				this.usersRepository.findOneBy({
-					id: request.params.followee,
-					host: Not(IsNull()),
-				}),
-			]) as [MiLocalUser | MiRemoteUser | null, MiLocalUser | MiRemoteUser | null];
+		// 	const [follower, followee] = await Promise.all([
+		// 		this.usersRepository.findOneBy({
+		// 			id: request.params.follower,
+		// 			host: IsNull(),
+		// 		}),
+		// 		this.usersRepository.findOneBy({
+		// 			id: request.params.followee,
+		// 			host: Not(IsNull()),
+		// 		}),
+		// 	]) as [MiLocalUser | MiRemoteUser | null, MiLocalUser | MiRemoteUser | null];
 
-			if (follower == null || followee == null) {
-				reply.code(404);
-				return;
-			}
+		// 	if (follower == null || followee == null) {
+		// 		reply.code(404);
+		// 		return;
+		// 	}
 
-			reply.header('Cache-Control', 'public, max-age=180');
-			this.setResponseType(request, reply);
-			return (this.apRendererService.addContext(this.apRendererService.renderFollow(follower, followee)));
-		});
+		// 	reply.header('Cache-Control', 'public, max-age=180');
+		// 	this.setResponseType(request, reply);
+		// 	return (this.apRendererService.addContext(this.apRendererService.renderFollow(follower, followee)));
+		// });
 
-		// follow
-		fastify.get<{ Params: { followRequestId: string; } }>('/follows/:followRequestId', async (request, reply) => {
-			if (this.meta.federation === 'none') {
-				reply.code(403);
-				return;
-			}
+		// // follow
+		// fastify.get<{ Params: { followRequestId: string; } }>('/follows/:followRequestId', async (request, reply) => {
+		// 	if (this.meta.federation === 'none') {
+		// 		reply.code(403);
+		// 		return;
+		// 	}
 
-			// This may be used before the follow is completed, so we do not
-			// check if the following exists and only check if the follow request exists.
+		// 	// This may be used before the follow is completed, so we do not
+		// 	// check if the following exists and only check if the follow request exists.
 
-			const followRequest = await this.followRequestsRepository.findOneBy({
-				id: request.params.followRequestId,
-			});
+		// 	const followRequest = await this.followRequestsRepository.findOneBy({
+		// 		id: request.params.followRequestId,
+		// 	});
 
-			if (followRequest == null) {
-				reply.code(404);
-				return;
-			}
+		// 	if (followRequest == null) {
+		// 		reply.code(404);
+		// 		return;
+		// 	}
 
-			const [follower, followee] = await Promise.all([
-				this.usersRepository.findOneBy({
-					id: followRequest.followerId,
-					host: IsNull(),
-				}),
-				this.usersRepository.findOneBy({
-					id: followRequest.followeeId,
-					host: Not(IsNull()),
-				}),
-			]) as [MiLocalUser | MiRemoteUser | null, MiLocalUser | MiRemoteUser | null];
+		// 	const [follower, followee] = await Promise.all([
+		// 		this.usersRepository.findOneBy({
+		// 			id: followRequest.followerId,
+		// 			host: IsNull(),
+		// 		}),
+		// 		this.usersRepository.findOneBy({
+		// 			id: followRequest.followeeId,
+		// 			host: Not(IsNull()),
+		// 		}),
+		// 	]) as [MiLocalUser | MiRemoteUser | null, MiLocalUser | MiRemoteUser | null];
 
-			if (follower == null || followee == null) {
-				reply.code(404);
-				return;
-			}
+		// 	if (follower == null || followee == null) {
+		// 		reply.code(404);
+		// 		return;
+		// 	}
 
-			reply.header('Cache-Control', 'public, max-age=180');
-			this.setResponseType(request, reply);
-			return (this.apRendererService.addContext(this.apRendererService.renderFollow(follower, followee)));
-		});
+		// 	reply.header('Cache-Control', 'public, max-age=180');
+		// 	this.setResponseType(request, reply);
+		// 	return (this.apRendererService.addContext(this.apRendererService.renderFollow(follower, followee)));
+		// });
 
-		done();
+		// done();
 	}
 }

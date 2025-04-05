@@ -51,6 +51,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private globalEventService: GlobalEventService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const key = await this.userSecurityKeysRepository.findOneBy({
 				id: ps.credentialId,
 			});

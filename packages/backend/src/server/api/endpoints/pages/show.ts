@@ -57,6 +57,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private pageEntityService: PageEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			let page: MiPage | null = null;
 
 			if (ps.pageId) {

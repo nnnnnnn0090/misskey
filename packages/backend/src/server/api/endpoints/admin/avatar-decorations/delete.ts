@@ -33,6 +33,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private avatarDecorationService: AvatarDecorationService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			await this.avatarDecorationService.delete(ps.id, me);
 		});
 	}

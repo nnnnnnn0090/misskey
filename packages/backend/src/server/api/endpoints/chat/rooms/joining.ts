@@ -47,6 +47,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private chatEntityService: ChatEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const memberships = await this.chatService.getMyMemberships(me.id, ps.limit, ps.sinceId, ps.untilId);
 
 			return this.chatEntityService.packRoomMemberships(memberships, me, {

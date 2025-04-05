@@ -50,6 +50,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		@Inject('queue:inbox') public inboxQueue: InboxQueue,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const jobs = await this.inboxQueue.getJobs(['delayed']);
 
 			const res = [] as [string, number][];

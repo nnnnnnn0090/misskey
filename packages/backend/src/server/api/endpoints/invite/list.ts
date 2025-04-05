@@ -48,6 +48,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private queryService: QueryService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const query = this.queryService.makePaginationQuery(this.registrationTicketsRepository.createQueryBuilder('ticket'), ps.sinceId, ps.untilId)
 				.andWhere('ticket.createdById = :meId', { meId: me.id })
 				.leftJoinAndSelect('ticket.createdBy', 'createdBy')

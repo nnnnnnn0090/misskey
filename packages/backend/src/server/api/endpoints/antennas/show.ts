@@ -49,6 +49,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private antennaEntityService: AntennaEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			// Fetch the antenna
 			const antenna = await this.antennasRepository.findOneBy({
 				id: ps.antennaId,

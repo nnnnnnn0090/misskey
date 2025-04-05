@@ -48,6 +48,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private reversiGameEntityService: ReversiGameEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const game = await this.reversiService.checkCrc(ps.gameId, ps.crc32);
 			if (game) {
 				return {

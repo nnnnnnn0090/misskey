@@ -83,6 +83,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const currentWebhooksCount = await this.webhooksRepository.countBy({
 				userId: me.id,
 			});

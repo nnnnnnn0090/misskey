@@ -35,6 +35,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private systemWebhookService: SystemWebhookService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			await this.systemWebhookService.deleteSystemWebhook(
 				ps.id,
 				me,

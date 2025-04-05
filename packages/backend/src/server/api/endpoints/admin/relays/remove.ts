@@ -29,6 +29,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private relayService: RelayService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			return await this.relayService.removeRelay(ps.inbox);
 		});
 	}

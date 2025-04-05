@@ -42,6 +42,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private emailService: EmailService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			return await this.emailService.validateEmailForAccount(ps.emailAddress);
 		});
 	}

@@ -51,6 +51,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private clipFavoritesRepository: ClipFavoritesRepository,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const clip = await this.clipsRepository.findOneBy({ id: ps.clipId });
 			if (clip == null) {
 				throw new ApiError(meta.errors.noSuchClip);

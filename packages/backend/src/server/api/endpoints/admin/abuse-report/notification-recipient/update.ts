@@ -93,6 +93,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private abuseReportNotificationRecipientEntityService: AbuseReportNotificationRecipientEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			if (ps.method === 'email') {
 				const userProfile = await this.userProfilesRepository.findOneBy({ userId: ps.userId });
 				if (!ps.userId || !userProfile) {

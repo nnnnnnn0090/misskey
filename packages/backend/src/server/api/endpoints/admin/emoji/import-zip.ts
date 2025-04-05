@@ -27,6 +27,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private queueService: QueueService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			this.queueService.createImportCustomEmojisJob(me, ps.fileId);
 		});
 	}

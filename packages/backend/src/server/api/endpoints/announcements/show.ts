@@ -43,6 +43,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private announcementService: AnnouncementService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			try {
 				return await this.announcementService.getAnnouncement(ps.announcementId, me);
 			} catch (err) {

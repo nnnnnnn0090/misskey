@@ -54,6 +54,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private notificationService: NotificationService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			// Generate access token
 			const accessToken = secureRndstr(32);
 

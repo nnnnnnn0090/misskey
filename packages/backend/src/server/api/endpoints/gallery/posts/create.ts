@@ -64,6 +64,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private idService: IdService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const files = (await Promise.all(ps.fileIds.map(fileId =>
 				this.driveFilesRepository.findOneBy({
 					id: fileId,

@@ -42,6 +42,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private userListsRepository: UserListsRepository,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const userList = await this.userListsRepository.findOneBy({
 				id: ps.listId,
 				userId: me.id,

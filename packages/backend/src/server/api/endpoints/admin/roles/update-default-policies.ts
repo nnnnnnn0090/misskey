@@ -37,6 +37,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private moderationLogService: ModerationLogService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const before = await this.metaService.fetch(true);
 
 			await this.metaService.update({

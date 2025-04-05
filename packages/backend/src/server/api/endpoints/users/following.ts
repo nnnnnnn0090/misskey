@@ -94,6 +94,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const user = await this.usersRepository.findOneBy(ps.userId != null
 				? { id: ps.userId }
 				: { usernameLower: ps.username!.toLowerCase(), host: this.utilityService.toPunyNullable(ps.host) ?? IsNull() });

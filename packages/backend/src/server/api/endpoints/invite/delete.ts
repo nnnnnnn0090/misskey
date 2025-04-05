@@ -55,6 +55,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const ticket = await this.registrationTicketsRepository.findOneBy({ id: ps.inviteId });
 			const isModerator = await this.roleService.isModerator(me);
 

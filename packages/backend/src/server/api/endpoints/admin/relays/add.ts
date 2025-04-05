@@ -66,6 +66,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private relayService: RelayService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			try {
 				if (new URL(ps.inbox).protocol !== 'https:') throw new Error('https only');
 			} catch {

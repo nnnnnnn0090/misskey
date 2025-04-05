@@ -33,6 +33,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private accessTokensRepository: AccessTokensRepository,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			if (ps.tokenId) {
 				const tokenExist = await this.accessTokensRepository.exists({ where: { id: ps.tokenId } });
 

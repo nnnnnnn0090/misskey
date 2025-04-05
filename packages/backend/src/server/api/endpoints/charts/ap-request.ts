@@ -34,6 +34,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private apRequestChart: ApRequestChart,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			return await this.apRequestChart.getChart(ps.span, ps.limit, ps.offset ? new Date(ps.offset) : null);
 		});
 	}

@@ -59,6 +59,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private webhookTestService: WebhookTestService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			try {
 				await this.webhookTestService.testUserWebhook({
 					webhookId: ps.webhookId,

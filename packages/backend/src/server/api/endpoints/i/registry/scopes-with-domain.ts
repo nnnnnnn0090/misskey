@@ -46,6 +46,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private registryApiService: RegistryApiService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			return await this.registryApiService.getAllScopeAndDomains(me.id);
 		});
 	}

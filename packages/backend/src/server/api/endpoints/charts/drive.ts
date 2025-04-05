@@ -34,6 +34,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private driveChart: DriveChart,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			return await this.driveChart.getChart(ps.span, ps.limit, ps.offset ? new Date(ps.offset) : null);
 		});
 	}

@@ -44,6 +44,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private appEntityService: AppEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const query = {
 				userId: me.id,
 			};

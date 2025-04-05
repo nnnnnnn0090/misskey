@@ -48,6 +48,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private featuredService: FeaturedService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			let postIds: string[];
 			if (this.galleryPostsRankingCacheLastFetchedAt !== 0 && (Date.now() - this.galleryPostsRankingCacheLastFetchedAt < 1000 * 60 * 30)) {
 				postIds = this.galleryPostsRankingCache;

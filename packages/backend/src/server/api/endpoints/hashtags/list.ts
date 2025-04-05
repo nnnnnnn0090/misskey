@@ -46,6 +46,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private hashtagEntityService: HashtagEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const query = this.hashtagsRepository.createQueryBuilder('tag');
 
 			if (ps.attachedToUserOnly) query.andWhere('tag.attachedUsersCount != 0');

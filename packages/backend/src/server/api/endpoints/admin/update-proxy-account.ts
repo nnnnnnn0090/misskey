@@ -41,6 +41,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private systemAccountService: SystemAccountService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const proxy = await this.systemAccountService.updateCorrespondingUserProfile('proxy', {
 				description: ps.description,
 			});

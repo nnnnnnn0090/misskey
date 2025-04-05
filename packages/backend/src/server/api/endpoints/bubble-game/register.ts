@@ -60,6 +60,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private idService: IdService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const seedDate = new Date(parseInt(ps.seed, 10));
 			const now = new Date();
 

@@ -34,6 +34,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private pushNotificationService: PushNotificationService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			await this.swSubscriptionsRepository.delete({
 				...(me ? { userId: me.id } : {}),
 				endpoint: ps.endpoint,

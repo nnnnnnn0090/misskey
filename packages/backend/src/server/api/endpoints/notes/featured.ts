@@ -54,6 +54,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private featuredService: FeaturedService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			let noteIds: string[];
 			if (ps.channelId) {
 				noteIds = await this.featuredService.getInChannelNotesRanking(ps.channelId, 50);

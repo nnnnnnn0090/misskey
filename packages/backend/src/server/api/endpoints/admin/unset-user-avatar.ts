@@ -35,6 +35,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 		private moderationLogService: ModerationLogService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const user = await this.usersRepository.findOneBy({ id: ps.userId });
 
 			if (user == null) {

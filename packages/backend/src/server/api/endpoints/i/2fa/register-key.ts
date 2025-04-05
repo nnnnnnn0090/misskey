@@ -193,6 +193,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 		private userAuthService: UserAuthService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const token = ps.token;
 			const profile = await this.userProfilesRepository.findOne({
 				where: {

@@ -46,6 +46,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private userSearchService: UserSearchService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const users = await this.userSearchService.search(ps.query.trim(), me?.id ?? null, {
 				offset: ps.offset,
 				limit: ps.limit,

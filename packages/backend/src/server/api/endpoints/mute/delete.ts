@@ -57,6 +57,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private getterService: GetterService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const muter = me;
 
 			// Check if the mutee is yourself

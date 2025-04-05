@@ -49,6 +49,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private clipEntityService: ClipEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			// Fetch the clip
 			const clip = await this.clipsRepository.findOneBy({
 				id: ps.clipId,

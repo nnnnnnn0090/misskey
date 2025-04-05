@@ -65,6 +65,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private globalEventService: GlobalEventService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			// Fetch folder
 			const folder = await this.driveFoldersRepository.findOneBy({
 				id: ps.folderId,

@@ -43,6 +43,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private chatService: ChatService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const message = await this.chatService.findMyMessageById(me.id, ps.messageId);
 			if (message == null) {
 				throw new ApiError(meta.errors.noSuchMessage);

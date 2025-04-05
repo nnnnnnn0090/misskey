@@ -71,6 +71,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private pushNotificationService: PushNotificationService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			// if already subscribed
 			const exist = await this.swSubscriptionsRepository.findOneBy({
 				userId: me.id,

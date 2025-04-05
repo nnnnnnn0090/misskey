@@ -35,6 +35,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private abuseReportNotificationService: AbuseReportNotificationService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			await this.abuseReportNotificationService.deleteRecipient(
 				ps.id,
 				me,

@@ -64,6 +64,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private userRenoteMutingService: UserRenoteMutingService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const muter = me;
 
 			// 自分自身

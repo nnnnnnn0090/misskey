@@ -11,7 +11,7 @@ import rename from 'rename';
 import sharp from 'sharp';
 import { sharpBmp } from '@misskey-dev/sharp-read-bmp';
 import type { Config } from '@/config.js';
-import type { MiDriveFile, DriveFilesRepository } from '@/models/_.js';
+import type { MiDriveFile, DriveFilesRepository, MiAccessToken } from '@/models/_.js';
 import { DI } from '@/di-symbols.js';
 import { createTemp } from '@/misc/create-temp.js';
 import { FILE_TYPE_BROWSERSAFE } from '@/const.js';
@@ -29,6 +29,8 @@ import { isMimeImage } from '@/misc/is-mime-image.js';
 import { correctFilename } from '@/misc/correct-filename.js';
 import { handleRequestRedirectToOmitSearch } from '@/misc/fastify-hook-handlers.js';
 import type { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginOptions } from 'fastify';
+import { AuthenticateService } from './api/AuthenticateService.js';
+import { MiLocalUser } from '@/models/User.js';
 
 const _filename = fileURLToPath(import.meta.url);
 const _dirname = dirname(_filename);
@@ -52,10 +54,30 @@ export class FileServerService {
 		private videoProcessingService: VideoProcessingService,
 		private internalStorageService: InternalStorageService,
 		private loggerService: LoggerService,
+		private authenticateService: AuthenticateService,
 	) {
 		this.logger = this.loggerService.getLogger('server', 'gray');
 
 		//this.createServer = this.createServer.bind(this);
+	}
+	
+	@bindThis
+	private async isAuthenticated(token: string) {
+		let user: MiLocalUser | null = null;
+		let app: MiAccessToken | null = null;
+
+		try {
+			if (token == null) {
+				return false;
+			}
+			[user, app] = await this.authenticateService.authenticate(token);
+			if (user == null) {
+				return false;
+			}
+		} catch (e) {
+			return false;
+		}
+		return true;
 	}
 
 	@bindThis
@@ -78,10 +100,14 @@ export class FileServerService {
 			});
 
 			fastify.get<{ Params: { key: string; } }>('/files/:key', async (request, reply) => {
+				if (!await this.isAuthenticated(request.cookies.token)) return;
+
 				return await this.sendDriveFile(request, reply)
 					.catch(err => this.errorHandler(request, reply, err));
 			});
 			fastify.get<{ Params: { key: string; } }>('/files/:key/*', async (request, reply) => {
+				if (!await this.isAuthenticated(request.cookies.token)) return;
+
 				return await reply.redirect(`${this.config.url}/files/${request.params.key}`, 301);
 			});
 			done();
@@ -91,6 +117,8 @@ export class FileServerService {
 			Params: { url: string; };
 			Querystring: { url?: string; };
 		}>('/proxy/:url*', async (request, reply) => {
+			if (!await this.isAuthenticated(request.cookies.token)) return;
+
 			return await this.proxyHandler(request, reply)
 				.catch(err => this.errorHandler(request, reply, err));
 		});

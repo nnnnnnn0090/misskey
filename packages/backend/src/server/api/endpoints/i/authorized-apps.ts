@@ -69,6 +69,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private appEntityService: AppEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			// Get tokens
 			const tokens = await this.accessTokensRepository.find({
 				where: {

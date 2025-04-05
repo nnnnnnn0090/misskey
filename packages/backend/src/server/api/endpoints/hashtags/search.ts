@@ -41,6 +41,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private hashtagsRepository: HashtagsRepository,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			if (!me) return null;
 			const hashtags = await this.hashtagsRepository.createQueryBuilder('tag')
 				.where('tag.name like :q', { q: sqlLikeEscape(ps.query.toLowerCase()) + '%' })
 				.orderBy('tag.mentionedLocalUsersCount', 'DESC')
