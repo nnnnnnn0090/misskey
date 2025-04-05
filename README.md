@@ -1,3 +1,7 @@
+Misskeyを完全プライベートに改造したものです。
+ログイン済みユーザー以外中を見れなくしました。（多分）
+全体を把握せずに行ったので、完全に塞げていない可能性があります。情報漏洩しても責任は取れません。自己責任でお使いください。
+
 <div align="center">
 <a href="https://misskey-hub.net">
 	<img src="./assets/title_float.svg" alt="Misskey logo" style="border-radius:50%" width="300"/>
